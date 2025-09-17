@@ -123,7 +123,8 @@ for nome_arquivo in arquivos_excel:
     df_plot['data'] = df_plot['data'].dt.strftime('%d-%m-%Y')
     df_plot['Nivel_Risco'] = pd.cut(df_plot['risco_fogo'], bins=limites_risco, labels=nomes_risco, right=False)
 
-    # Gera o gráfico Plotly
+    
+# Gera o gráfico Plotly
     fig = go.Figure()
 
     # Fundo do gráfico (Mapa de calor)
@@ -136,15 +137,24 @@ for nome_arquivo in arquivos_excel:
     plotly_colorscale = [(p, c) for p, c in paleta]
     fig.add_trace(go.Heatmap(x=xx, y=yy, z=EPG_norm, colorscale=plotly_colorscale, showscale=False, opacity=0.68, hoverinfo='none'))
 
-    # Linha de trajetória
-    fig.add_trace(go.Scatter(x=df_plot['risco_fogo'], y=df_plot['ICTR14'], mode='lines', line=dict(color='black', width=1.5, dash='dash'), hoverinfo='none', showlegend=False))
+    # Linha de trajetória (sem pontos)
+    fig.add_trace(go.Scatter(
+        x=df_plot['risco_fogo'],
+        y=df_plot['ICTR14'],
+        mode='lines',
+        line=dict(color='black', width=1.5, dash='dash'),
+        hoverinfo='none',
+        showlegend=False
+    ))
 
-    # Pontos coloridos
+    # Adiciona os pontos com cores baseadas no nível de risco
     for nivel in nomes_risco:
         df_nivel = df_plot[df_plot['Nivel_Risco'] == nivel]
         if not df_nivel.empty:
             fig.add_trace(go.Scatter(
-                x=df_nivel['risco_fogo'], y=df_nivel['ICTR14'], mode='markers',
+                x=df_nivel['risco_fogo'],
+                y=df_nivel['ICTR14'],
+                mode='markers',
                 marker=dict(color=mapa_de_cores[nivel], size=10, line=dict(width=1, color='black')),
                 name=f'Nível {nivel}',
                 hoverinfo='text',
@@ -152,7 +162,17 @@ for nome_arquivo in arquivos_excel:
                     f"<b>Data:</b> {data}<br><b>Risco de Fogo:</b> {rf}<br><b>TTR:</b> {ttr}<br><b>Nível:</b> {nivel}"
                     for data, rf, ttr in zip(df_nivel['data'], df_nivel['risco_fogo'], df_nivel['ICTR14'])
                 ],
+                showlegend=False  # Não mostra a legenda para os pontos plotados
             ))
+
+    # Cria as entradas de legenda separadamente para que sejam fixas
+    for nivel in nomes_risco:
+        fig.add_trace(go.Scatter(
+            x=[None], y=[None],
+            mode='markers',
+            marker=dict(color=mapa_de_cores[nivel], size=10, line=dict(width=1, color='black')),
+            name=f'Nível {nivel}',
+        ))
     
     # Layout e títulos
     fig.update_layout(
@@ -161,7 +181,8 @@ for nome_arquivo in arquivos_excel:
         yaxis=dict(title='Tendência temporal de risco (TTR)', range=[0, 1.60], showgrid=False, zeroline=False, showline=False,),
         plot_bgcolor='white',
         width=800, height=500,
-        legend_title_text='<b>Níveis de Risco</b>'       
+        legend_title_text='<b>Níveis de Risco</b>',
+        legend=dict(font=dict(color="black")),
     )
     
     # Exibe o gráfico no Streamlit
