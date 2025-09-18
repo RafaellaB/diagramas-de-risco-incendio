@@ -88,7 +88,7 @@ def calc_ttr(df):
 # === GERAÇÃO DO GRÁFICO PLOTLY PARA CADA ARQUIVO ===
 
 # Lista dos arquivos a serem processados
-caminho_pasta = "." #busca o arquivo na mesma pasta do script
+caminho_pasta = os.path.dirname(__file__)
 arquivos_excel = [
     "Risco_Ubatuba.xlsx",
     "Risco_Palmeiras.xlsx",
